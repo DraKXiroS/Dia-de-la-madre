@@ -175,13 +175,13 @@
         </div>
 
         <div class="message-box">
-            <div id="text-display" class="message">Cargando sorpresa...</div>
+            <div id="text-display" class="message">Cargando...</div>
         </div>
 
         <div class="btn-group">
             <button onclick="nextMessage()" id="btn-next">Ver otra sorpresa 🌸</button>
-            <button onclick="playMusic()" id="btn-audio" style="background: #a6c1ee; box-shadow: 0 4px 15px rgba(166, 193, 238, 0.4); opacity: 0.6; cursor: not-allowed;" disabled>
-                🎵 Cargando audio...
+            <button onclick="playMusic()" id="btn-audio" style="background: #a6c1ee; opacity: 0.6;" disabled>
+                🎵 Esperando nombre...
             </button>
         </div>
 
@@ -200,7 +200,9 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const nombreURL = params.get("nombre");
+        // Limpiamos espacios y pasamos a minúsculas para evitar errores
+        const nombreURL = (params.get("nombre") || "").trim().toLowerCase();
+        
         const signature = document.querySelector(".signature");
         const musicElement = document.getElementById('bg-music');
         const sourceElement = musicElement.querySelector("source");
@@ -209,44 +211,46 @@
 
         let audioListo = false;
 
-        // 1. CARGAR DATOS DESDE JSON
         async function cargarDatos() {
             try {
-                // Buscamos el archivo JSON en tu repositorio
                 const response = await fetch('lista_alumnos.json');
-                if (!response.ok) throw new Error("No se pudo cargar la lista de alumnos.");
+                if (!response.ok) throw new Error("JSON no encontrado");
                 
-                const alumnos = await response.json();
+                const dataRaw = await response.json();
                 
+                // Convertimos las llaves del JSON a minúsculas para comparar fácil
+                const alumnos = {};
+                Object.keys(dataRaw).forEach(key => {
+                    alumnos[key.toLowerCase().trim()] = dataRaw[key];
+                });
+
                 if (nombreURL && alumnos[nombreURL]) {
-                    // Si el nombre existe en el JSON
-                    signature.innerText = "Con todo mi amor, " + nombreURL + " 💌";
+                    // Ponemos el nombre con la primera letra mayúscula en la firma
+                    const nombreBonito = nombreURL.charAt(0).toUpperCase() + nombreURL.slice(1);
+                    signature.innerText = "Con todo mi amor, " + nombreBonito + " 💌";
+                    
                     sourceElement.src = "audios/" + alumnos[nombreURL];
                     musicElement.load();
                     
-                    // Habilitar botón
                     btnAudio.disabled = false;
                     btnAudio.style.opacity = "1";
-                    btnAudio.style.cursor = "pointer";
                     btnAudio.innerText = "🎵 Escuchar audio";
                     audioListo = true;
-                    textDisplay.innerText = "Cada día es especial a tu lado...";
                 } else {
-                    // Si el nombre no está o no hay parámetro
-                    signature.innerText = "Con todo mi amor, Tu hijo/a 💌";
-                    textDisplay.innerText = "Cada día es especial a tu lado...";
-                    btnAudio.innerText = "🎵 Audio no disponible";
+                    btnAudio.innerText = "🎵 Nombre no encontrado";
+                    console.log("Buscando en JSON: ", nombreURL);
                 }
-            } catch (error) {
-                console.error("Error cargando JSON:", error);
                 textDisplay.innerText = "Cada día es especial a tu lado...";
-                btnAudio.innerText = "🎵 Error de configuración";
+            } catch (error) {
+                console.error("Error:", error);
+                textDisplay.innerText = "Error cargando lista de alumnos";
+                btnAudio.innerText = "🎵 Error de lista";
             }
         }
 
         cargarDatos();
 
-        // 2. LÓGICA DE MENSAJES
+        // Lógica de mensajes y pétalos (sin cambios)
         const mensajes = [
             "Porque tus abrazos curan cualquier dolor... ❤️",
             "Porque tu paciencia es infinita como el mar... 🌊",
@@ -257,8 +261,6 @@
         ];
 
         let index = 0;
-        const btnNext = document.getElementById('btn-next');
-
         function nextMessage() {
             index++;
             if (index < mensajes.length) {
@@ -266,19 +268,10 @@
                 setTimeout(() => {
                     textDisplay.innerText = mensajes[index];
                     textDisplay.style.opacity = 1;
-                    if(index === mensajes.length - 1) {
-                        btnNext.innerText = "¡Sorpresa Final! 🎉";
-                    }
                 }, 400);
             } else {
-                showFinalCelebration();
-            }
-        }
-
-        function showFinalCelebration() {
-            document.getElementById('celebration').style.display = 'flex';
-            for(let i=0; i<50; i++) {
-                setTimeout(crearPetalo, i * 50);
+                document.getElementById('celebration').style.display = 'flex';
+                for(let i=0; i<50; i++) setTimeout(crearPetalo, i * 50);
             }
         }
 
@@ -286,16 +279,12 @@
             document.getElementById('celebration').style.display = 'none';
             index = 0;
             textDisplay.innerText = "Cada día es especial a tu lado...";
-            btnNext.innerText = "Ver otra sorpresa 🌸";
         }
 
-        // 3. REPRODUCCIÓN
         function playMusic() {
-            if (!audioListo) return;
-            
-            musicElement.play().catch((error) => {
-                alert("Por favor, intenta presionar el botón de nuevo.");
-            });
+            if (audioListo) {
+                musicElement.play().catch(e => alert("Toca de nuevo para reproducir"));
+            }
         }
 
         function crearPetalo() {
@@ -306,11 +295,9 @@
             petal.style.height = (size * 1.5) + "px";
             petal.style.left = Math.random() * 100 + "vw";
             petal.style.animationDuration = (Math.random() * 3 + 4) + "s";
-            petal.style.opacity = Math.random() * 0.6 + 0.4;
             document.getElementById('petals').appendChild(petal);
-            setTimeout(() => { petal.remove(); }, 7000);
+            setTimeout(() => petal.remove(), 7000);
         }
-
         setInterval(crearPetalo, 400);
     </script>
 </body>
