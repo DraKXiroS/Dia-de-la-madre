@@ -199,18 +199,21 @@
     </audio>
 
     <script>
-        // 1. LÓGICA DE PERSONALIZACIÓN POR URL
+        // 1. LÓGICA DE PERSONALIZACIÓN AUTOMÁTICA
         const params = new URLSearchParams(window.location.search);
-        const nombre = params.get("nombre") || "Tu hijo/a";
-        const audioPath = params.get("audio");
+        const nombreAlumno = params.get("nombre") || "Tu hijo/a";
 
-        // Aplicar nombre dinámico
-        document.querySelector(".signature").innerText = "Con todo mi amor, " + nombre + " 💌";
+        // Referencia automática: El audio se llama igual que el nombre en la carpeta audios/
+        // Ejemplo: Si nombre es "Juan", busca "audios/Juan.mp3"
+        const audioPath = nombreAlumno !== "Tu hijo/a" ? `audios/${nombreAlumno}.mp3` : null;
+
+        // Aplicar nombre dinámico en la firma
+        document.querySelector(".signature").innerText = "Con todo mi amor, " + nombreAlumno + " 💌";
         
         const musicElement = document.getElementById('bg-music');
         const sourceElement = musicElement.querySelector("source");
 
-        // Si hay un audio en la URL, lo cargamos
+        // Cargar el audio automáticamente basado en el nombre
         if (audioPath) {
             sourceElement.src = audioPath;
             musicElement.load();
@@ -260,18 +263,19 @@
             btnNext.innerText = "Ver otra sorpresa 🌸";
         }
 
-        // 3. REPRODUCCIÓN DE AUDIO CORREGIDA
+        // 3. REPRODUCCIÓN DE AUDIO
         function playMusic() {
             const music = document.getElementById('bg-music');
             
-            if (!music.querySelector("source").src || music.querySelector("source").src.includes("window.location.href")) {
-                alert("No se ha configurado ningún audio en la URL.");
+            // Si no hay source cargado (porque no hay nombre en la URL)
+            if (!sourceElement.src || sourceElement.src === "" || sourceElement.src.includes(window.location.hostname + window.location.pathname)) {
+                alert("Para escuchar un audio personalizado, asegúrate de usar el enlace correcto con tu nombre.");
                 return;
             }
 
             music.play().catch((error) => {
                 console.error("Error al reproducir:", error);
-                alert("Toca nuevamente el botón para reproducir el audio.");
+                alert("Asegúrate de que el archivo 'audios/" + nombreAlumno + ".mp3' exista en tu repositorio.");
             });
         }
 
