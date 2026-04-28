@@ -175,13 +175,13 @@
         </div>
 
         <div class="message-box">
-            <div id="text-display" class="message">Cada día es especial a tu lado...</div>
+            <div id="text-display" class="message">Cargando sorpresa...</div>
         </div>
 
         <div class="btn-group">
             <button onclick="nextMessage()" id="btn-next">Ver otra sorpresa 🌸</button>
-            <button onclick="playMusic()" id="btn-audio" style="background: #a6c1ee; box-shadow: 0 4px 15px rgba(166, 193, 238, 0.4);">
-                🎵 Escuchar audio
+            <button onclick="playMusic()" id="btn-audio" style="background: #a6c1ee; box-shadow: 0 4px 15px rgba(166, 193, 238, 0.4); opacity: 0.6; cursor: not-allowed;" disabled>
+                🎵 Cargando audio...
             </button>
         </div>
 
@@ -199,22 +199,52 @@
     </audio>
 
     <script>
-        // 1. LÓGICA DE PERSONALIZACIÓN
         const params = new URLSearchParams(window.location.search);
-        const nombreAlumno = params.get("nombre") || "Tu hijo/a";
-
-        // IMPORTANTE: Asegúrate que en GitHub la carpeta se llame "audios" y el archivo "cancion_test.mp3"
-        const audioPath = nombreAlumno !== "Tu hijo/a" ? `audios/${nombreAlumno}.mp3` : null;
-
-        document.querySelector(".signature").innerText = "Con todo mi amor, " + nombreAlumno + " 💌";
-        
+        const nombreURL = params.get("nombre");
+        const signature = document.querySelector(".signature");
         const musicElement = document.getElementById('bg-music');
         const sourceElement = musicElement.querySelector("source");
+        const btnAudio = document.getElementById('btn-audio');
+        const textDisplay = document.getElementById('text-display');
 
-        if (audioPath) {
-            sourceElement.src = audioPath;
-            musicElement.load();
+        let audioListo = false;
+
+        // 1. CARGAR DATOS DESDE JSON
+        async function cargarDatos() {
+            try {
+                // Buscamos el archivo JSON en tu repositorio
+                const response = await fetch('lista_alumnos.json');
+                if (!response.ok) throw new Error("No se pudo cargar la lista de alumnos.");
+                
+                const alumnos = await response.json();
+                
+                if (nombreURL && alumnos[nombreURL]) {
+                    // Si el nombre existe en el JSON
+                    signature.innerText = "Con todo mi amor, " + nombreURL + " 💌";
+                    sourceElement.src = "audios/" + alumnos[nombreURL];
+                    musicElement.load();
+                    
+                    // Habilitar botón
+                    btnAudio.disabled = false;
+                    btnAudio.style.opacity = "1";
+                    btnAudio.style.cursor = "pointer";
+                    btnAudio.innerText = "🎵 Escuchar audio";
+                    audioListo = true;
+                    textDisplay.innerText = "Cada día es especial a tu lado...";
+                } else {
+                    // Si el nombre no está o no hay parámetro
+                    signature.innerText = "Con todo mi amor, Tu hijo/a 💌";
+                    textDisplay.innerText = "Cada día es especial a tu lado...";
+                    btnAudio.innerText = "🎵 Audio no disponible";
+                }
+            } catch (error) {
+                console.error("Error cargando JSON:", error);
+                textDisplay.innerText = "Cada día es especial a tu lado...";
+                btnAudio.innerText = "🎵 Error de configuración";
+            }
         }
+
+        cargarDatos();
 
         // 2. LÓGICA DE MENSAJES
         const mensajes = [
@@ -227,7 +257,6 @@
         ];
 
         let index = 0;
-        const textDisplay = document.getElementById('text-display');
         const btnNext = document.getElementById('btn-next');
 
         function nextMessage() {
@@ -260,21 +289,12 @@
             btnNext.innerText = "Ver otra sorpresa 🌸";
         }
 
-        // 3. REPRODUCCIÓN Y DEPURACIÓN
+        // 3. REPRODUCCIÓN
         function playMusic() {
-            const music = document.getElementById('bg-music');
+            if (!audioListo) return;
             
-            if (!audioPath) {
-                alert("No se ha detectado un nombre en la URL (ej: ?nombre=Mateo)");
-                return;
-            }
-
-            music.play().then(() => {
-                console.log("Reproduciendo con éxito");
-            }).catch((error) => {
-                // Mensaje detallado para ayudarte a encontrar el error
-                console.error("Error:", error);
-                alert("Error al cargar el audio.\n\nEl sistema buscó este archivo:\n" + window.location.origin + window.location.pathname + audioPath + "\n\nVerifica que el nombre en GitHub sea idéntico y esté en la carpeta 'audios'.");
+            musicElement.play().catch((error) => {
+                alert("Por favor, intenta presionar el botón de nuevo.");
             });
         }
 
