@@ -175,13 +175,13 @@
         </div>
 
         <div class="message-box">
-            <div id="text-display" class="message">Cargando...</div>
+            <div id="text-display" class="message">Iniciando...</div>
         </div>
 
         <div class="btn-group">
             <button onclick="nextMessage()" id="btn-next">Ver otra sorpresa 🌸</button>
             <button onclick="playMusic()" id="btn-audio" style="background: #a6c1ee; opacity: 0.6;" disabled>
-                🎵 Esperando nombre...
+                🎵 Cargando...
             </button>
         </div>
 
@@ -200,8 +200,9 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        // Limpiamos espacios y pasamos a minúsculas para evitar errores
-        const nombreURL = (params.get("nombre") || "").trim().toLowerCase();
+        // Obtenemos el nombre tal cual viene en la URL para buscar en el JSON
+        const nombreURLOriginal = (params.get("nombre") || "").trim();
+        const nombreURLBase = nombreURLOriginal.toLowerCase();
         
         const signature = document.querySelector(".signature");
         const musicElement = document.getElementById('bg-music');
@@ -210,26 +211,31 @@
         const textDisplay = document.getElementById('text-display');
 
         let audioListo = false;
+        let rutaAudioIntentada = "";
 
         async function cargarDatos() {
             try {
-                const response = await fetch('lista_alumnos.json');
-                if (!response.ok) throw new Error("JSON no encontrado");
+                // Añadimos un timestamp para evitar que el navegador guarde una versión vieja del JSON
+                const response = await fetch('lista_alumnos.json?v=' + Date.now());
+                if (!response.ok) throw new Error("Archivo lista_alumnos.json no encontrado en la raíz");
                 
                 const dataRaw = await response.json();
                 
-                // Convertimos las llaves del JSON a minúsculas para comparar fácil
+                // Creamos un mapa donde las llaves son siempre minúsculas para comparar
                 const alumnos = {};
                 Object.keys(dataRaw).forEach(key => {
                     alumnos[key.toLowerCase().trim()] = dataRaw[key];
                 });
 
-                if (nombreURL && alumnos[nombreURL]) {
-                    // Ponemos el nombre con la primera letra mayúscula en la firma
-                    const nombreBonito = nombreURL.charAt(0).toUpperCase() + nombreURL.slice(1);
-                    signature.innerText = "Con todo mi amor, " + nombreBonito + " 💌";
+                if (nombreURLBase && alumnos[nombreURLBase]) {
+                    // Si existe, usamos el nombre del JSON para la firma (respetando sus mayúsculas originales)
+                    signature.innerText = "Con todo mi amor, " + nombreURLOriginal + " 💌";
                     
-                    sourceElement.src = "audios/" + alumnos[nombreURL];
+                    // IMPORTANTE: El nombre del archivo de audio DEBE ser exacto al del JSON
+                    const nombreArchivo = alumnos[nombreURLBase];
+                    rutaAudioIntentada = "audios/" + nombreArchivo;
+                    
+                    sourceElement.src = rutaAudioIntentada;
                     musicElement.load();
                     
                     btnAudio.disabled = false;
@@ -237,26 +243,25 @@
                     btnAudio.innerText = "🎵 Escuchar audio";
                     audioListo = true;
                 } else {
-                    btnAudio.innerText = "🎵 Nombre no encontrado";
-                    console.log("Buscando en JSON: ", nombreURL);
+                    btnAudio.innerText = "🎵 Nombre no en lista";
+                    console.log("No se encontró '" + nombreURLBase + "' en el JSON");
                 }
                 textDisplay.innerText = "Cada día es especial a tu lado...";
             } catch (error) {
-                console.error("Error:", error);
-                textDisplay.innerText = "Error cargando lista de alumnos";
-                btnAudio.innerText = "🎵 Error de lista";
+                console.error("Error crítico:", error);
+                textDisplay.innerText = "Error: " + error.message;
+                btnAudio.innerText = "🎵 Error de carga";
             }
         }
 
         cargarDatos();
 
-        // Lógica de mensajes y pétalos (sin cambios)
+        // --- Lógica de la interfaz ---
         const mensajes = [
             "Porque tus abrazos curan cualquier dolor... ❤️",
             "Porque tu paciencia es infinita como el mar... 🌊",
             "Porque me has enseñado a ser valiente... 💪",
             "Porque nadie cocina con tanto amor como tú... 🍲",
-            "Porque eres mi primer ejemplo de amor... ✨",
             "¡Eres la mujer más increíble del mundo! 🌹"
         ];
 
@@ -283,7 +288,12 @@
 
         function playMusic() {
             if (audioListo) {
-                musicElement.play().catch(e => alert("Toca de nuevo para reproducir"));
+                musicElement.play().catch(e => {
+                    console.error("Fallo al reproducir:", e);
+                    btnAudio.style.background = "#ff4d4d";
+                    btnAudio.innerText = "❌ No se halló el archivo";
+                    alert("Error: El navegador no encuentra el archivo:\n\n" + rutaAudioIntentada + "\n\nRevisa si el nombre tiene mayúsculas diferentes en tu carpeta 'audios'.");
+                });
             }
         }
 
