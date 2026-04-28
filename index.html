@@ -194,22 +194,27 @@
         <button onclick="closeCelebration()" style="margin-top: 20px;">Regresar</button>
     </div>
 
-    <audio id="bg-music" loop>
-        <source src="audio1.mp3" type="audio/mpeg">
+    <audio id="bg-music" loop preload="auto">
+        <source src="" type="audio/mpeg">
     </audio>
 
     <script>
         // 1. LÓGICA DE PERSONALIZACIÓN POR URL
         const params = new URLSearchParams(window.location.search);
         const nombre = params.get("nombre") || "Tu hijo/a";
-        const audio = params.get("audio") || "audio1.mp3";
+        const audioPath = params.get("audio");
 
-        // Aplicar cambios dinámicos
+        // Aplicar nombre dinámico
         document.querySelector(".signature").innerText = "Con todo mi amor, " + nombre + " 💌";
+        
         const musicElement = document.getElementById('bg-music');
         const sourceElement = musicElement.querySelector("source");
-        sourceElement.src = audio;
-        musicElement.load(); // Recarga el audio con el nuevo archivo
+
+        // Si hay un audio en la URL, lo cargamos
+        if (audioPath) {
+            sourceElement.src = audioPath;
+            musicElement.load();
+        }
 
         // 2. LÓGICA DE MENSAJES
         const mensajes = [
@@ -250,7 +255,6 @@
 
         function closeCelebration() {
             document.getElementById('celebration').style.display = 'none';
-            // Reinicio corregido
             index = 0;
             textDisplay.innerText = "Cada día es especial a tu lado...";
             btnNext.innerText = "Ver otra sorpresa 🌸";
@@ -259,8 +263,14 @@
         // 3. REPRODUCCIÓN DE AUDIO CORREGIDA
         function playMusic() {
             const music = document.getElementById('bg-music');
-            music.currentTime = 0; // Reinicia el audio cada vez que se toca
-            music.play().catch(() => {
+            
+            if (!music.querySelector("source").src || music.querySelector("source").src.includes("window.location.href")) {
+                alert("No se ha configurado ningún audio en la URL.");
+                return;
+            }
+
+            music.play().catch((error) => {
+                console.error("Error al reproducir:", error);
                 alert("Toca nuevamente el botón para reproducir el audio.");
             });
         }
