@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para la mejor Mamá</title>
+    <style>
+        :root {
+            --primary-pink: #ff758c;
+            --secondary-pink: #ff7eb3;
+            --soft-white: #fff5f7;
+            --text-color: #5d3444;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            perspective: 1000px;
+        }
+
+        .petals-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            z-index: 10;
+            position: relative;
+            transform-style: preserve-3d;
+            border: 2px solid white;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            color: var(--primary-pink);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .message-box {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            line-height: 1.6;
+            animation: fadeIn 0.8s ease-in-out;
+            font-style: italic;
+        }
+
+        .heart-container {
+            position: relative;
+            height: 100px;
+            margin: 20px 0;
+        }
+
+        .heart {
+            background-color: var(--primary-pink);
+            display: inline-block;
+            height: 50px;
+            position: relative;
+            transform: rotate(-45deg);
+            width: 50px;
+            animation: pulse 1.2s infinite;
+        }
+
+        .heart:before, .heart:after {
+            content: "";
+            background-color: var(--primary-pink);
+            border-radius: 50%;
+            height: 50px;
+            position: absolute;
+            width: 50px;
+        }
+
+        .heart:before { top: -25px; left: 0; }
+        .heart:after { left: 25px; top: 0; }
+
+        @keyframes pulse {
+            0% { transform: rotate(-45deg) scale(1); }
+            50% { transform: rotate(-45deg) scale(1.2); }
+            100% { transform: rotate(-45deg) scale(1); }
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background: linear-gradient(to right, var(--primary-pink), var(--secondary-pink));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 117, 140, 0.4);
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 117, 140, 0.6);
+        }
+
+        .signature {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .petal {
+            position: absolute;
+            background: radial-gradient(circle, #ffb7c5, #ff758c);
+            border-radius: 100% 0 100% 0;
+            opacity: 0.7;
+            animation: falling linear infinite;
+        }
+
+        @keyframes falling {
+            0% { transform: translate(0, -10%) rotate(0deg); opacity: 1; }
+            100% { transform: translate(100px, 100vh) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #celebration {
+            position: fixed;
+            top:0; left:0; width: 100%; height:100%;
+            background: rgba(255,255,255,0.9);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="petals-container" id="petals"></div>
+
+    <div class="card">
+        <h1>¡Feliz Día, Mamá!</h1>
+        
+        <div class="heart-container">
+            <div class="heart"></div>
+        </div>
+
+        <div class="message-box">
+            <div id="text-display" class="message">Cada día es especial a tu lado...</div>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="nextMessage()" id="btn-next">Ver otra sorpresa 🌸</button>
+            <button onclick="playMusic()" style="background: #a6c1ee; box-shadow: 0 4px 15px rgba(166, 193, 238, 0.4);">
+                🎵 Escuchar audio
+            </button>
+        </div>
+
+        <p class="signature">Con todo mi amor, Tu hijo/a 💌</p>
+    </div>
+
+    <div id="celebration">
+        <h1 style="font-size: 3rem;">🌹 Eres la Mejor 🌹</h1>
+        <p style="font-size: 1.5rem; color: #5d3444;">Gracias por ser mi guía y mi luz.</p>
+        <button onclick="closeCelebration()" style="margin-top: 20px;">Regresar</button>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="audio1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 1. LÓGICA DE PERSONALIZACIÓN POR URL
+        const params = new URLSearchParams(window.location.search);
+        const nombre = params.get("nombre") || "Tu hijo/a";
+        const audio = params.get("audio") || "audio1.mp3";
+
+        // Aplicar cambios dinámicos
+        document.querySelector(".signature").innerText = "Con todo mi amor, " + nombre + " 💌";
+        const musicElement = document.getElementById('bg-music');
+        const sourceElement = musicElement.querySelector("source");
+        sourceElement.src = audio;
+        musicElement.load(); // Recarga el audio con el nuevo archivo
+
+        // 2. LÓGICA DE MENSAJES
+        const mensajes = [
+            "Porque tus abrazos curan cualquier dolor... ❤️",
+            "Porque tu paciencia es infinita como el mar... 🌊",
+            "Porque me has enseñado a ser valiente... 💪",
+            "Porque nadie cocina con tanto amor como tú... 🍲",
+            "Porque eres mi primer ejemplo de amor... ✨",
+            "¡Eres la mujer más increíble del mundo! 🌹"
+        ];
+
+        let index = 0;
+        const textDisplay = document.getElementById('text-display');
+        const btnNext = document.getElementById('btn-next');
+
+        function nextMessage() {
+            index++;
+            if (index < mensajes.length) {
+                textDisplay.style.opacity = 0;
+                setTimeout(() => {
+                    textDisplay.innerText = mensajes[index];
+                    textDisplay.style.opacity = 1;
+                    if(index === mensajes.length - 1) {
+                        btnNext.innerText = "¡Sorpresa Final! 🎉";
+                    }
+                }, 400);
+            } else {
+                showFinalCelebration();
+            }
+        }
+
+        function showFinalCelebration() {
+            document.getElementById('celebration').style.display = 'flex';
+            for(let i=0; i<50; i++) {
+                setTimeout(crearPetalo, i * 50);
+            }
+        }
+
+        function closeCelebration() {
+            document.getElementById('celebration').style.display = 'none';
+            // Reinicio corregido
+            index = 0;
+            textDisplay.innerText = "Cada día es especial a tu lado...";
+            btnNext.innerText = "Ver otra sorpresa 🌸";
+        }
+
+        // 3. REPRODUCCIÓN DE AUDIO CORREGIDA
+        function playMusic() {
+            const music = document.getElementById('bg-music');
+            music.currentTime = 0; // Reinicia el audio cada vez que se toca
+            music.play().catch(() => {
+                alert("Toca nuevamente el botón para reproducir el audio.");
+            });
+        }
+
+        function crearPetalo() {
+            const petal = document.createElement("div");
+            petal.classList.add("petal");
+            const size = Math.random() * 15 + 10;
+            petal.style.width = size + "px";
+            petal.style.height = (size * 1.5) + "px";
+            petal.style.left = Math.random() * 100 + "vw";
+            petal.style.animationDuration = (Math.random() * 3 + 4) + "s";
+            petal.style.opacity = Math.random() * 0.6 + 0.4;
+            document.getElementById('petals').appendChild(petal);
+            setTimeout(() => { petal.remove(); }, 7000);
+        }
+
+        setInterval(crearPetalo, 400);
+    </script>
+</body>
+</html>
